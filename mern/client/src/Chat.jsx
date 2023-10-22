@@ -2,6 +2,7 @@ import { useEffect } from "react"
 import { useState, useContext } from "react"
 import { UserContext } from "./UserContext" 
 import { uniqBy } from "lodash"
+import axios from 'axios';
 
 export default function Chat(){
     const [ws, setWs] = useState(null)
@@ -48,14 +49,22 @@ export default function Chat(){
             text: newMessageText,
              sender: id,
             recipient: selectedUserId,
-        id: Date.now()}]))
+        _id: Date.now()}]))
     }
+
+    useEffect(()=>{
+        if(selectedUserId){
+            axios.get('/messages/'+selectedUserId).then(res=>{
+                setMessages(res.data)
+            })
+        }
+    }, [selectedUserId])
 
     const onlinePeoplExclOurUser = {...onlinePeople}
     delete onlinePeoplExclOurUser[id];
     // console.log('yeessss')
 
-    const messagesWithoutDupes =uniqBy(messages, 'id')
+    const messagesWithoutDupes =uniqBy(messages, '_id')
 
 
     return(
@@ -83,7 +92,7 @@ export default function Chat(){
                         <div className="relative h-full">
                             <div className="overflow-y-scroll absolute inset-0 top-0 left-0 right-0 bottom-2">
                             {messagesWithoutDupes.map(message=>(
-                                <div className={(message.sender===id?'text-right': 'text-left')}>
+                                <div ket={message._id}className={(message.sender===id?'text-right': 'text-left')}>
                                 <div
                                     key={message.id} // You should also add a unique key prop for each message
                                     className={`text-left inline-block p-2 my-2 rounded-sm text-sm ${message.sender === id ? 'bg-blue-700 text-white' : 'bg-blue-100'}`}
