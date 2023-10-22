@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser')
 const mongoose = require('mongoose')
 const bcrypt = require('bcryptjs')
 const User = require('./models/User')
+const Message = require('./models/Message')
 const ws = require('ws')
 
 dotenv.config()
@@ -82,7 +83,7 @@ wss.on('connection', (connection, req)=>{
     const cookies = req.headers.cookie
     if(cookies){
         const tokenCookieString = cookies.split(';').find(str=>str.startsWith('token='))
-        console.log(tokenCookieString)
+        // console.log(tokenCookieString) 
         if(tokenCookieString){
             const token = tokenCookieString.split('=')[1]
             if(token){
@@ -95,6 +96,29 @@ wss.on('connection', (connection, req)=>{
             }
         }
     }
+
+    
+    connection.on('message' ,async (message)=>{
+        const messageData = JSON.parse(message.toString())
+        const {recipient, text} = messageData
+        if(recipient&&text){
+            const messageDoc = await Message.create({
+                sender: connection.userId,
+                recipient,
+                text,
+            });
+            [...wss.clients].filter(c=>c.userId===recipient)
+            .forEach(c=>c.send(JSON.stringify({
+                text,
+                sender:connection.userId,
+                recipient, 
+                id: messageDoc._id
+            })));
+        }
+    });
+
+    
+    
     [...wss.clients].forEach(client=>{
         client.send(JSON.stringify({
             online:[...wss.clients].map(c=>({userId: c.userId, username: c.username}))
