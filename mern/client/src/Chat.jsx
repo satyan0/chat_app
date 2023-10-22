@@ -97,8 +97,8 @@ export default function Chat(){
                                     key={message.id} // You should also add a unique key prop for each message
                                     className={`text-left inline-block p-2 my-2 rounded-sm text-sm ${message.sender === id ? 'bg-blue-700 text-white' : 'bg-blue-100'}`}
                                     >
-                                    sender: {message.sender}<br/>
-                                    my id: {id}<br/>
+                                    {/* sender: {message.sender}<br/>
+                                    my id: {id}<br/> */}
                                     {message.text}
                                     </div>
                                 </div>
