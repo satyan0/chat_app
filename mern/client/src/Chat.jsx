@@ -1,21 +1,50 @@
 import { useEffect } from "react"
-import { useState } from "react"
-    
+import { useState, useContext } from "react"
+import { UserContext } from "./UserContext" 
+
 export default function Chat(){
     const [ws, setWs] = useState(null)
+    const [onlinePeople, setOnlinePeople] = useState({})
+    const [selectedUserId, setSelectedUserId] = useState(null)
+    const {username} = useContext(UserContext)
+
     useEffect(()=>{
         const ws = new WebSocket('ws://localhost:4040')
         setWs(ws)
         ws.addEventListener('message', handleMessage)
     }, [])
 
-    function handleMessage(e){
-        console.log('new message', e)
+    function showOnlinePeople(peopleArray){
+        const people = {}
+        peopleArray.forEach(({userId, username})=>{
+            people[userId] = username
+        })
+        // console.log(people)
+        setOnlinePeople(people)
+    }
 
+    function selectContact(userId){
+        setSelectedUserId(userId)
+    }
+
+
+
+    function handleMessage(ev){
+        // console.log('new message', e)
+        const messageData = JSON.parse(ev.data)
+        if('online' in messageData){
+            showOnlinePeople(messageData.online)
+        }
     }
     return(
         <div className="flex h-screen">
-            <div className="bg-blue-100 w-1/3">contacts</div>
+            <div className="bg-blue-100 w-1/3 pt-4">
+                <div className="text-blue-900 font-bold flex gap-2 mb-4">BesideYou</div>
+                {Object.keys(onlinePeople).map(userId=>(
+                    <div key={userId}onClick={()=>selectContact(userId)} className={"border-b border-grey-100 py-2 p-4 flex items-center cursor-pointer "+(userId===selectedUserId?'bg-blue-200': '')}>
+                        <span className="text-grey-800">{onlinePeople[userId]}</span>
+                    </div>
+                ))}</div>
             <div className="flex flex-col bg-blue-300 w-2/3 p-2">
                 <div className="flex-grow">messages with selected person</div>
                 <div className="flex gap-2 mx-2">
